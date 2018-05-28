@@ -1,59 +1,59 @@
 import React from "react";
 import PropTypes from "prop-types";
 
-class Board extends React.Component {
-  static propTypes = {
-    rows: PropTypes.number.isRequired,
-    cols: PropTypes.number.isRequired,
-    gamePiece: PropTypes.string.isRequired,
-    updateTurn: PropTypes.func.isRequired
-  };
+export default function Board({
+  squares,
+  handleClick,
+  moves,
+  winner,
+  rows,
+  cols,
+  computersTurn
+}) {
+  const [path, winningMoves ] = moves;
+  const updatedSquares = winner
+    ? squares.map(
+        square =>
+          winningMoves.find(({ x, y }) => square.x === x && square.y === y)
+            ? {
+                ...square,
+                color: "#ffa801"
+              }
+            : square
+      )
+    : squares;
+  return (
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns: `repeat(${cols}, 100px)`,
+        gridTemplateRows: `repeat(${rows}, 100px)`
+      }}
+    >
+      {updatedSquares.map((square, index) => (
+        // using index as key is fine here since it is unique
+        <button
+          style={{ backgroundColor: square.color }}
+          key={index}
+          disabled={square.value !== "" || computersTurn || winner !== null}
+          onClick={() => handleClick(square)}
+        >
+          <h1 style={{ color: square.color !== null ? "white" : null }}>
+            {square.value.toUpperCase()}
+          </h1>
+        </button>
+      ))}
+    </div>
+  );
+}
 
-  state = {
-    squares: []
-  };
-
-  handleClick = ({ x, y }) => {
-    const squares = this.state.squares.map(
-      square =>
-        square.x === x && square.y === y
-          ? { ...square, value: this.props.gamePiece }
-          : square
-    );
-
-    this.setState({ squares }, () => this.props.updateTurn());
-  };
-
-  componentDidMount() {
-    // Build squares for board
-    const { rows, cols } = this.props;
-
-    // gets dimension of the board
-    const n = rows * cols;
-
-    // imperatively build the board using objects with properties
-    // x, y, and value
-    let y = -1;
-    const squares = Array.from(Array(n)).map((base, index) => {
-      y = index % rows === 0 ? y + 1 : y;
-      return {
-        x: index % rows,
-        y,
-        value: ""
-      };
-    });
-
-    this.setState({ squares });
-  } // componentDidMount
-
-  render() {
-    return this.props.children({
-      squares: this.state.squares,
-      handleClick: this.handleClick,
-      rows: this.props.rows,
-      cols: this.props.cols
-    });
-  } // render
-} // Board
-
-export default Board;
+Board.propTypes = {
+  squares: PropTypes.array.isRequired,
+  handleClick: PropTypes.func.isRequired,
+  rows: PropTypes.number.isRequired,
+  cols: PropTypes.number.isRequired,
+  computersMove: PropTypes.bool,
+  // winner can be null or a character
+  winner: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
+  moves: PropTypes.array.isRequired
+};
